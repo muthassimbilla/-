@@ -97,8 +97,8 @@ const EmailProviderExtractor: React.FC = () => {
     setProcessedCount(0);
     
     try {
-      // For small texts, use synchronous processing
-      if (text.length < 100000) { // Less than 100KB
+      // For small texts, use synchronous processing with smaller threshold
+      if (text.length < 50000) { // Less than 50KB
         setProcessingStatus("Processing small dataset...");
         await processSmallDataset(text, shouldAutoCopy);
         return;
@@ -138,13 +138,13 @@ const EmailProviderExtractor: React.FC = () => {
 
     const processedEmails = new Set<string>();
 
-    // Process in small chunks to maintain responsiveness
-    const CHUNK_SIZE = 500;
+    // Process in smaller chunks to maintain responsiveness
+    const CHUNK_SIZE = 100;
     for (let i = 0; i < potentialEmails.length; i += CHUNK_SIZE) {
       const chunk = potentialEmails.slice(i, i + CHUNK_SIZE);
       
-      // Yield control to prevent blocking
-      await new Promise(resolve => setTimeout(resolve, 0));
+      // Yield control to prevent blocking - use longer delay for better responsiveness
+      await new Promise(resolve => setTimeout(resolve, 10));
       
       chunk.forEach(email => {
         const cleanEmail = email.toLowerCase();
@@ -160,6 +160,11 @@ const EmailProviderExtractor: React.FC = () => {
 
       setProcessingProgress(Math.round(((i + CHUNK_SIZE) / potentialEmails.length) * 100));
       setProcessedCount(processedEmails.size);
+      
+      // Additional yield for very large datasets
+      if (i > 0 && i % 1000 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     }
 
     setExtractedEmails(categorizedEmails);
@@ -287,8 +292,8 @@ const EmailProviderExtractor: React.FC = () => {
                   allText += cell + " ";
                 }
               });
-            }
-          });
+            // Yield control and update progress with longer delay
+            await new Promise(resolve => setTimeout(resolve, 20));
 
           // Yield control and update progress
           await new Promise(resolve => setTimeout(resolve, 0));
@@ -296,6 +301,9 @@ const EmailProviderExtractor: React.FC = () => {
           const sheetProgress = (i + BATCH_SIZE) / jsonData.length;
           const totalProgress = 30 + ((sheetIndex + sheetProgress) / totalSheets) * 40;
           setProcessingProgress(Math.min(Math.round(totalProgress), 70));
+          
+          // Additional yield between sheets
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         setProcessingStatus(`Processed sheet ${sheetIndex + 1}/${totalSheets}`);
