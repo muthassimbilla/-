@@ -1,6 +1,6 @@
 // Web Worker for processing large email datasets
 const emailWorker = () => {
-  self.onmessage = function(e) {
+  self.onmessage = async function(e) {
     const { text, chunkSize = 5000 } = e.data;
     
     try {
