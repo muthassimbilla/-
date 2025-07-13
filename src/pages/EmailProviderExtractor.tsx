@@ -500,7 +500,7 @@ const EmailProviderExtractor: React.FC = () => {
       setInputText(text);
       showPopupMessage("Text pasted from clipboard!", "success");
 
-      if (autoExtract && text.length < 50000) { // Only auto-extract for smaller texts
+      if (autoExtract && text.length < 10000) { // Only auto-extract for very small texts
         await extractEmailsFromText(text, true);
       }
     } catch (err) {
